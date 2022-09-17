@@ -1,5 +1,5 @@
-mod params;
-pub use params::{Params, PairsIter};
+pub mod params;
+pub use params::{Params, PairsIter, PairsArray};
 
 pub struct Method {
     pub name: String,

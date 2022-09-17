@@ -4,10 +4,16 @@ use serde::Serialize;
 use std::collections::HashMap;
 use ijson::IValue;
 
+pub mod pairs_iter;
+pub use pairs_iter::PairsIter;
+
+pub mod pairs_array;
+pub use pairs_array::PairsArray;
+
 type Pair = (String, IValue);
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Params(Vec<Pair>);
+pub struct Params(pub Vec<Pair>);
 
 impl Params {
     pub fn new() -> Params {
@@ -50,33 +56,6 @@ impl<'a> IntoIterator for &'a mut Params {
     }
 }
 
-//https://stackoverflow.com/questions/63119000/why-am-i-required-to-cover-t-in-impl-foreigntraitlocaltype-for-t-e0210
-pub struct PairsIter<K, V, I>(I)
-where
-    I: ExactSizeIterator<Item = (K, V)>,
-    K: ToString,
-    V: Serialize;
-
-
-impl<K, V, I> TryFrom<PairsIter<K, V, I>> for Params
-where
-    I: ExactSizeIterator<Item = (K, V)>,
-    K: ToString,
-    V: Serialize
-{
-    type Error = serde_json::Error;
-
-    fn try_from(pairs_iter: PairsIter<K, V, I>) -> Result<Self, Self::Error>{
-        let mut vector = Vec::with_capacity(pairs_iter.0.len());
-
-        for (k, v) in pairs_iter.0 {
-            vector.push((k.to_string(), ijson::to_value(v)?));
-        }
-
-        Ok(Params(vector))
-    }
-}
-
 impl From<HashMap<String, String>> for Params {
     fn from(map: HashMap<String, String>) -> Self {
         let mut vector = Vec::with_capacity(map.len());
@@ -89,21 +68,18 @@ impl From<HashMap<String, String>> for Params {
     }
 }
 
-impl<K, V, const N: usize> TryFrom<[(K, V); N]> for Params
+impl<K, const N: usize> From<[(K, IValue); N]> for Params
 where
     K: ToString,
-    V: Serialize
 {
-    type Error = serde_json::Error;
-    
-    fn try_from(array: [(K, V); N]) -> Result<Self, Self::Error> {
+    fn from(array: [(K, IValue); N]) -> Self {
         let mut vector = Vec::with_capacity(N);
 
         for (key, value) in array {
-            vector.push((key.to_string(), ijson::to_value(value)?))
+            vector.push((key.to_string(), value))
         }
 
-        Ok(Params(vector))
+        Params(vector)
     }
 }
 
@@ -126,7 +102,6 @@ impl Serialize for Params {
 mod tests {
     use super::*;
     use std::collections::HashMap;
-    use ijson::ijson;
 
     #[test]
     fn from_hashmap() {
@@ -138,39 +113,6 @@ mod tests {
 
         assert_eq!(params, Params(vec![
             ("user_id".to_string(), "1".into())
-        ]));
-    }
-
-    #[test]
-    fn try_from_array() {
-        let array = [("user_id", 1)];
-
-        let params = Params::try_from(array).unwrap();
-
-        assert_eq!(params, Params(vec![
-            ("user_id".to_string(), ijson!(1))
-        ]));
-    }
-
-    #[test]
-    fn try_from_pairs_iter() {
-        let array = vec![("user_id", 1)];
-
-        let params = Params::try_from(PairsIter(array.into_iter())).unwrap();
-
-        assert_eq!(params, Params(vec![
-            ("user_id".to_string(), ijson!(1))
-        ]));
-    }
-
-    #[test]
-    fn from_string_pairs_iter() {
-        let array = vec![("user_ids", "1,2,3,4,5")];
-
-        let params = Params::try_from(PairsIter(array.into_iter())).unwrap();
-
-        assert_eq!(params, Params(vec![
-            ("user_ids".to_string(), "1,2,3,4,5".into())
         ]));
     }
 }
