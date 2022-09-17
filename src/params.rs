@@ -82,7 +82,7 @@ impl From<HashMap<String, String>> for Params {
         let mut vector = Vec::with_capacity(map.len());
 
         for (k, v) in map {
-            vector.push((k, ijson::to_value(v).unwrap()));
+            vector.push((k, v.into()));
         }
 
         Params(vector)
@@ -137,7 +137,7 @@ mod tests {
         let params = Params::from(hashmap);
 
         assert_eq!(params, Params(vec![
-            ("user_id".to_string(), ijson::to_value("1".to_string()).unwrap())
+            ("user_id".to_string(), "1".into())
         ]));
     }
 
@@ -170,7 +170,7 @@ mod tests {
         let params = Params::try_from(PairsIter(array.into_iter())).unwrap();
 
         assert_eq!(params, Params(vec![
-            ("user_ids".to_string(), ijson::to_value("1,2,3,4,5".to_string()).unwrap())
+            ("user_ids".to_string(), "1,2,3,4,5".into())
         ]));
     }
 }
