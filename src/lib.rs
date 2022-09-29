@@ -1,6 +1,7 @@
 pub mod params;
 pub use params::{Params, PairsIter, PairsArray};
 
+#[derive(Debug)]
 pub struct Method {
     pub name: String,
     pub params: Params
