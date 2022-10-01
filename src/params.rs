@@ -20,8 +20,12 @@ impl Params {
         Params(Vec::new())
     }
 
-    pub fn push<K: ToString>(&mut self, key: K, value: IValue) {
-        self.0.push((key.to_string(), value))
+    pub fn insert<K, V>(&mut self, key: K, value: IValue)
+    where
+        K: ToString,
+        V: Into<IValue>
+    {
+        self.0.push((key.to_string(), value.into()))
     }
 
     pub fn len(&self) -> usize {
