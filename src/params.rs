@@ -20,7 +20,7 @@ impl Params {
         Params(Vec::new())
     }
 
-    pub fn insert<K, V>(&mut self, key: K, value: IValue)
+    pub fn insert<K, V>(&mut self, key: K, value: V)
     where
         K: ToString,
         V: Into<IValue>
