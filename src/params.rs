@@ -72,15 +72,16 @@ impl From<HashMap<String, String>> for Params {
     }
 }
 
-impl<K, const N: usize> From<[(K, IValue); N]> for Params
+impl<K, V, const N: usize> From<[(K, V); N]> for Params
 where
     K: ToString,
+    V: Into<IValue>
 {
-    fn from(array: [(K, IValue); N]) -> Self {
+    fn from(array: [(K, V); N]) -> Self {
         let mut vector = Vec::with_capacity(N);
 
         for (key, value) in array {
-            vector.push((key.to_string(), value))
+            vector.push((key.to_string(), value.into()))
         }
 
         Params(vector)
